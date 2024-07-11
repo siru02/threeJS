@@ -5,9 +5,26 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Document</title>
 	<link rel="stylesheet" href="01-basic.css">
-	<script type="module" src="01-basic.js" defer></script>
+	<script type="importmap">
+		{
+			"imports": {
+			"three": "https://unpkg.com/three@0.138.3/build/three.module.js",
+			"GLTFLoader":
+			"https://unpkg.com/three@0.141.0/examples/jsm/loaders/GLTFLoader.js"
+		  }
+		}
+	</script>
+	<!-- <script type="module">
+		import * as THREE from 'three';
+	</script> -->
+	<!-- <script type="module" src="01-basic.js" defer></script> -->
+	<script type="module" src="pacman.js" defer></script>
 </head>
 <body>
-	<div id="webgl-container"></div>
+	<!-- <div id="webgl-container"></div> -->
+    <div style="display: flex;">
+        <canvas id="canvas1"></canvas>
+        <canvas id="canvas2"></canvas>
+    </div>
 </body>
 </html>

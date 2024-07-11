@@ -1,5 +1,4 @@
-import * as THREE from "../build/THREE.module.js";
-
+import * as THREE from 'three';
 class App {
 	constructor() {
 		const divContainer = document.querySelector("#webgl-container");

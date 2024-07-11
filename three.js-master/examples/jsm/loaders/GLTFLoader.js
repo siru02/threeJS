@@ -6,7 +6,7 @@ import {
 	BufferGeometry,
 	ClampToEdgeWrapping,
 	Color,
-	ColorManagement,
+	// ColorManagement,
 	DirectionalLight,
 	DoubleSide,
 	FileLoader,
@@ -26,7 +26,7 @@ import {
 	LinearFilter,
 	LinearMipmapLinearFilter,
 	LinearMipmapNearestFilter,
-	LinearSRGBColorSpace,
+	// LinearSRGBColorSpace,
 	Loader,
 	LoaderUtils,
 	Material,
@@ -62,7 +62,7 @@ import {
 	Vector2,
 	Vector3,
 	VectorKeyframeTrack,
-	SRGBColorSpace,
+	// SRGBColorSpace,
 	InstancedBufferAttribute
 } from 'three';
 import { toTrianglesDrawMode } from '../utils/BufferGeometryUtils.js';

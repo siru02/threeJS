@@ -1,0 +1,11 @@
+Model Information:
+* title:	PacMan
+* source:	https://sketchfab.com/3d-models/pacman-17800bd2ae224ee281e43efcbc498e43
+* author:	subtixx (https://sketchfab.com/subtixx)
+
+Model License:
+* license type:	CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
+* requirements:	Author must be credited. No commercial use.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "PacMan" (https://sketchfab.com/3d-models/pacman-17800bd2ae224ee281e43efcbc498e43) by subtixx (https://sketchfab.com/subtixx) licensed under CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
