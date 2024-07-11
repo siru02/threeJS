@@ -21,19 +21,13 @@ renderer2.setSize(window.innerWidth / 2, window.innerHeight);
 let scene = new THREE.Scene();
 scene.background = new THREE.Color("skyblue");
 
-// let camera = new THREE.PerspectiveCamera(
-//     45,
-//     window.innerWidth / window.innerHeight,
-//     0.1,
-//     1000
-// );
 const camera1 = new THREE.PerspectiveCamera(
     45, 
     (window.innerWidth / 2) / window.innerHeight, 
     0.1, 
     1000
 );
-camera1.position.set(1, 1, 42);// 카메라의 위치 설정 (x: 0, y: 0, z: 42)
+camera1.position.set(0, 0, 42);// 카메라의 위치 설정 (x: 0, y: 0, z: 42)
 camera1.lookAt(0, 0, 0);
 
 const camera2 = new THREE.PerspectiveCamera(
@@ -42,7 +36,7 @@ const camera2 = new THREE.PerspectiveCamera(
     0.1, 
     1000
 );
-camera2.position.set(1, 1, -42);
+camera2.position.set(0, 0, -42);
 console.dir(camera2);
 camera2.lookAt(0, 0, 0);
 
