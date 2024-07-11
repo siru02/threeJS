@@ -63,6 +63,19 @@ loader.load("pac/scene.gltf", function (gltf) {
     model2.position.z = 4; //카메라의 좌표가 (0, 0, 42)이므로 y가 화면에서 높낮이, x가 좌우, z가 원근감을 나타냄
 });
 
+const shape = new THREE.Shape();
+shape.moveTo(6, 6);
+shape.lineTo(6, -6);
+shape.lineTo(-6, -6);
+shape.lineTo(-6, 6);
+shape.closePath();
+const geometry = new THREE.BufferGeometry();
+const points = shape.getPoints();
+geometry.setFromPoints(points);
+const material = new THREE.LineBasicMaterial({color: 0xffff00});
+const line = new THREE.Line(geometry, material);
+scene.add(line);
+
 let flag = 1;
 // 애니메이션 루프
 function animate() {
@@ -71,10 +84,11 @@ function animate() {
     if (model) {
         // 모델 회전
         model.rotation.y += 0.02;
-        if (model.position.z >= 24 || model.position.z <= -24){
+        if (model.position.z >= 20 || model.position.z <= -20){
             flag *= -1;
         }
         model.position.z += 0.2 * flag;
+        line.position.z += 0.2 * flag;
         model2.rotation.y += 0.01;
 		// model.rotation.x += 0.01;
         // console.log("Model Position:", model.position);

@@ -1,7 +1,9 @@
 import * as THREE from 'three';
+import {OrbitControls } from '../examples/jsm/controls/OrbitControls.js';
 
 class App {
 	constructor() {
+		this._flag = 1;
 		const divContainer = document.querySelector("#webgl-container");
 		this._divContainer = divContainer; //다른 메소드에서 참조하게 하기 위해서 this의 변수로 설정
 
@@ -25,6 +27,7 @@ class App {
 		this._setupCamera(); //카메라 객체 설정
 		this._setupLight(); //광원을 설정
 		this._setupModel(); //3차원 모델을 설정
+		this._setupControls(); //컨트롤을 정의하는데 사용하는 메소드
 
 		window.onresize = this.resize.bind(this);
 		//화면의 크기가 resize되는 이벤트에서 객체의 resize되는 함수를 바인드
@@ -59,17 +62,49 @@ class App {
 		this._scene.add(light);
 	}
 
-	_setupModel() { //모델을 정의하는 메소드이며 이번에 만들것은 정육면체
-		const geometry = new THREE.BoxGeometry(1, 1, 1);
-		//가로 세로 깊이에 대한 값을 받음
-		const material = new THREE.MeshPhongMaterial({color: 0x44a88});
-		//재질의 색을 설정
-		//three에서는 다양한 geometry와 material제공 이걸 공부해야할듯
+	// _setupModel() { //모델을 정의하는 메소드이며 이번에 만들것은 정육면체
+	// 	const geometry = new THREE.PlaneGeometry();
+	// 	//가로 세로 깊이에 대한 값을 받음
+	// 	const material = new THREE.MeshPhongMaterial({color: 0x44a88});
+	// 	//재질의 색을 설정
 
-		const cube = new THREE.Mesh(geometry, material);//실제 객체 생성
+	// 	const cube = new THREE.Mesh(geometry, material);//실제 객체 생성
 
-		this._scene.add(cube); //화면의 구성요소로 추가된다
-		this._cube = cube;
+	// 	const lineMaterial = new THREE.LineBasicMaterial({color: 0xffff00});
+	// 	const line = new THREE.LineSegments(
+	// 		new THREE.WireframeGeometry(geometry), lineMaterial);
+
+	// 	const group = new THREE.Group();
+	// 	console.log(group.position)
+	// 	group.add(cube);
+	// 	group.add(line);
+
+	// 	this._scene.add(group); //화면의 구성요소로 추가된다
+	// 	this._cube = group;
+	// }
+
+	_setupModel() {
+		const shape = new THREE.Shape();
+		shape.moveTo(1, 1);
+		shape.lineTo(1, -1);
+		shape.lineTo(-1, -1);
+		shape.lineTo(-1, 1);
+		shape.closePath();
+
+		const geometry = new THREE.BufferGeometry();
+		const points = shape.getPoints();
+		geometry.setFromPoints(points);
+
+		const material = new THREE.LineBasicMaterial({color: 0xffff00});
+		const line = new THREE.Line(geometry, material);
+
+		this._line = line;
+		this._scene.add(line);
+	}
+
+	_setupControls() {
+		new OrbitControls(this._camera, this._divContainer);
+		//ObbitControl객체를 생성할 때는 카메라 객체와 마우스 이벤트를 받는 DOM요소가 필요하다
 	}
 
 	resize(){
@@ -95,8 +130,15 @@ class App {
 		time *= 0.001; //ms를 s로 바꿔준다
 
 		//x, y의 회전값에 시간값을 넣으면 x,y축으로 큐브가 회전하게된다
-		this._cube.rotation.x = time;
-		this._cube.rotation.y = time;
+		// this._cube.rotation.x = time;
+		// this._cube.rotation.y = time;
+		// this._line.rotation.x = time;
+		// this._line.rotation.y = time;
+        if (this._line.position.z >= 24 || this._line.position.z <= -24){
+            this._flag *= -1;
+        }
+        this._line.position.z += 0.2 * this._flag;
+		console.log(this._line);
 	}
 }
 
