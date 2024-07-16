@@ -1,9 +1,8 @@
-import * as THREE from 'three';
-import {OrbitControls } from '../examples/jsm/controls/OrbitControls.js';
+import * as THREE from '../build/three.module.js';
+import { OrbitControls } from "../examples/jsm/controls/OrbitControls.js"
 
 class App {
 	constructor() {
-		this._flag = 1;
 		const divContainer = document.querySelector("#webgl-container");
 		this._divContainer = divContainer; //다른 메소드에서 참조하게 하기 위해서 this의 변수로 설정
 
@@ -12,8 +11,9 @@ class App {
 //antialias를 활성화시켜주면 3차원장면이 렌더링될 때 오브젝트들의 경계선이 계단없이 부드럽게 표현됨
 		
 		renderer.setPixelRatio(window.devicePixelRatio); //pixel비율설정
-		divContainer.appendChild(renderer.domElement);
+		divContainer.appendChild(renderer.domElement); //div속성 내에 렌더링속성을 추가해서 canvas를 추가한다
 		//domElement란 DOM구조내의 개별 요소를 가리키는 용어
+		//renderer의 domElement는 canvas이다
 		this._renderer = renderer;
 		console.dir(this._renderer); //WebGLRenderer라는 dom객체
 		console.dir(renderer.domElement); //canvas를 가리킴 
@@ -27,19 +27,23 @@ class App {
 		this._setupCamera(); //카메라 객체 설정
 		this._setupLight(); //광원을 설정
 		this._setupModel(); //3차원 모델을 설정
-		this._setupControls(); //컨트롤을 정의하는데 사용하는 메소드
+		this._setupControls();
 
 		window.onresize = this.resize.bind(this);
 		//화면의 크기가 resize되는 이벤트에서 객체의 resize되는 함수를 바인드
-		//bind로 넘겨주는 이유는
+		//bind로 넘겨주는 이유는 resize함수 안에서 this가 가리키는 객체가 event객체가 아닌 App클래스를 가리키도록 하기 위해서
 		this.resize(); //현재창크기에 맞게 카메라, 광원, 렌더러를 설정
 
 		requestAnimationFrame(this.render.bind(this)); //여기서 콜백함수로 this.render가 넘어가므로 콜백함수가 호출되면서 렌더링이 실행된다
-		//3차원 그래픽을 만들어주는 메소드
-		//bind로 넘겨주는 이유는 render method의 코드 안에서 사용되는 this가
-		//app클래스의 객체를 가르키게 하기 위해서
+		//render메소드는 3차원 그래픽을 만들어주는 메소드
+		//bind로 넘겨주는 이유는 render method의 코드 안에서 사용되는 this가 app클래스의 객체를 가르키게 하기 위해서
+		//request~~함수에 넘기면 프레임최적화가 된다
 	}
 	//여기까지 생성자
+
+	_setupControls() {
+		new OrbitControls(this._camera, this._divContainer);
+	}
 
 	_setupCamera() {
 		const width = this._divContainer.clientWidth;//3차원 가로
@@ -62,50 +66,42 @@ class App {
 		this._scene.add(light);
 	}
 
-	// _setupModel() { //모델을 정의하는 메소드이며 이번에 만들것은 정육면체
-	// 	const geometry = new THREE.PlaneGeometry();
-	// 	//가로 세로 깊이에 대한 값을 받음
-	// 	const material = new THREE.MeshPhongMaterial({color: 0x44a88});
-	// 	//재질의 색을 설정
+	_setupModel() { //모델을 정의하는 메소드이며 이번에 만들것은 정육면체
+		const geometry = new THREE.PlaneGeometry(); //가로 세로 깊이에 대한 값을 받음
+		const material = new THREE.MeshPhongMaterial({color: 0x44a88});//재질의 색을 설정
+		const cube = new THREE.Mesh(geometry, material);//실제 객체 생성
 
-	// 	const cube = new THREE.Mesh(geometry, material);//실제 객체 생성
+		const lineMaterial = new THREE.LineBasicMaterial({color: 0xffff00});
+		const line = new THREE.LineSegments(
+			new THREE.WireframeGeometry(geometry), lineMaterial
+			);
+		
+		const group = new THREE.Group();
+		group.add(cube);
+		group.add(line);
 
-	// 	const lineMaterial = new THREE.LineBasicMaterial({color: 0xffff00});
-	// 	const line = new THREE.LineSegments(
-	// 		new THREE.WireframeGeometry(geometry), lineMaterial);
 
-	// 	const group = new THREE.Group();
-	// 	console.log(group.position)
-	// 	group.add(cube);
-	// 	group.add(line);
+		this._scene.add(group); //화면의 구성요소로 추가된다
+		this._cube = group;
+	}
 
-	// 	this._scene.add(group); //화면의 구성요소로 추가된다
-	// 	this._cube = group;
+	// _setupModel() {
+	// 	const shape = new THREE.Shape();
+	// 	shape.moveTo(1, 1);
+	// 	shape.lineTo(1, -1);
+	// 	shape.lineTo(-1, -1);
+	// 	shape.lineTo(-1, 1);
+	// 	shape.closePath();
+
+	// 	const geometry = new THREE.BufferGeometry();
+	// 	const points = shape.getPoints();
+	// 	geometry.setFromPoints(points);
+
+	// 	const material = new THREE.LineBasicMaterial({color: 0xffff00});
+	// 	const line = new THREE.Line(geometry, material);
+
+	// 	this._scene.add(line);
 	// }
-
-	_setupModel() {
-		const shape = new THREE.Shape();
-		shape.moveTo(1, 1);
-		shape.lineTo(1, -1);
-		shape.lineTo(-1, -1);
-		shape.lineTo(-1, 1);
-		shape.closePath();
-
-		const geometry = new THREE.BufferGeometry();
-		const points = shape.getPoints();
-		geometry.setFromPoints(points);
-
-		const material = new THREE.LineBasicMaterial({color: 0xffff00});
-		const line = new THREE.Line(geometry, material);
-
-		this._line = line;
-		this._scene.add(line);
-	}
-
-	_setupControls() {
-		new OrbitControls(this._camera, this._divContainer);
-		//ObbitControl객체를 생성할 때는 카메라 객체와 마우스 이벤트를 받는 DOM요소가 필요하다
-	}
 
 	resize(){
 		const width = this._divContainer.clientWidth;
@@ -132,13 +128,6 @@ class App {
 		//x, y의 회전값에 시간값을 넣으면 x,y축으로 큐브가 회전하게된다
 		// this._cube.rotation.x = time;
 		// this._cube.rotation.y = time;
-		// this._line.rotation.x = time;
-		// this._line.rotation.y = time;
-        if (this._line.position.z >= 24 || this._line.position.z <= -24){
-            this._flag *= -1;
-        }
-        this._line.position.z += 0.2 * this._flag;
-		console.log(this._line);
 	}
 }
 

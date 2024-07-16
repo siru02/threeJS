@@ -1,4 +1,6 @@
 import * as THREE from '../build/three.module.js';
+import { VertexNormalsHelper} from "../examples/jsm/helpers/VertexNormalsHelper.js"
+import { OrbitControls } from '../examples/jsm/controls/OrbitControls.js'
 
 class App {
 	constructor() {
@@ -6,17 +8,13 @@ class App {
 		this._divContainer = divContainer; //다른 메소드에서 참조하게 하기 위해서 this의 변수로 설정
 
 		const renderer = new THREE.WebGLRenderer({antialias: true});
-//renderer라는 변수는 화면에 찍어줄 모양의 정보를 담고있는 객체
-//antialias를 활성화시켜주면 3차원장면이 렌더링될 때 오브젝트들의 경계선이 계단없이 부드럽게 표현됨
 		
 		renderer.setPixelRatio(window.devicePixelRatio); //pixel비율설정
 		divContainer.appendChild(renderer.domElement); //div속성 내에 렌더링속성을 추가해서 canvas를 추가한다
-		//domElement란 DOM구조내의 개별 요소를 가리키는 용어
 		this._renderer = renderer;
 		console.dir(this._renderer); //WebGLRenderer라는 dom객체
 		console.dir(renderer.domElement); //canvas를 가리킴 
-		//WebGL객체가 생성되면 내부적으로 canvas를 생성함
-		console.dir(renderer); //this._renderer와 같다
+		console.dir(renderer);
 
 		const scene = new THREE.Scene();//scene객체를 생성한다
 		//scene객체는 THREE안의 생성자를 가져와서 호출
@@ -25,18 +23,19 @@ class App {
 		this._setupCamera(); //카메라 객체 설정
 		this._setupLight(); //광원을 설정
 		this._setupModel(); //3차원 모델을 설정
+		this._setupControls();
 
 		window.onresize = this.resize.bind(this);
-		//화면의 크기가 resize되는 이벤트에서 객체의 resize되는 함수를 바인드
-		//bind로 넘겨주는 이유는 resize함수 안에서 this가 가리키는 객체가 event객체가 아닌 App클래스를 가리키도록 하기 위해서
+
 		this.resize(); //현재창크기에 맞게 카메라, 광원, 렌더러를 설정
 
 		requestAnimationFrame(this.render.bind(this)); //여기서 콜백함수로 this.render가 넘어가므로 콜백함수가 호출되면서 렌더링이 실행된다
-		//render메소드는 3차원 그래픽을 만들어주는 메소드
-		//bind로 넘겨주는 이유는 render method의 코드 안에서 사용되는 this가 app클래스의 객체를 가르키게 하기 위해서
-		//request~~함수에 넘기면 프레임최적화가 된다
 	}
 	//여기까지 생성자
+
+	_setupControls() {
+		new OrbitControls(this._camera, this._divContainer);
+	}
 
 	_setupCamera() {
 		const width = this._divContainer.clientWidth;//3차원 가로
@@ -59,14 +58,69 @@ class App {
 		this._scene.add(light);
 	}
 
-	_setupModel() { //모델을 정의하는 메소드이며 이번에 만들것은 정육면체
-		const geometry = new THREE.BoxGeometry(1, 1, 1); //가로 세로 깊이에 대한 값을 받음
-		const material = new THREE.MeshPhongMaterial({color: 0x44a88});//재질의 색을 설정
+	_setupModel() {
+		const rawPositions = [
+			-1, -1, 0,
+			 1, -1, 0,
+			-1,  1, 0,
+			 1,  1, 0
+		];
 
-		const cube = new THREE.Mesh(geometry, material);//실제 객체 생성
+		const rawNormals = [
+			0, 0, 1,
+			0, 0, 1,
+			0, 0, 1,
+			0, 0, 1
+		]
+	
+		const rawColors = [
+			1, 0, 0,
+			0, 1, 0,
+			0, 0, 1,
+			1, 1, 0
+		];
 
-		this._scene.add(cube); //화면의 구성요소로 추가된다
-		this._cube = cube;
+		const rawUVs = [
+			0, 0,
+			1, 0,
+			0, 1,
+			1, 1
+		];
+
+
+		const positions = new Float32Array(rawPositions);
+		const normals = new Float32Array(rawNormals);
+		const colors = new Float32Array(rawColors);
+		const uvs = new Float32Array(rawUVs);
+
+		const geometry = new THREE.BufferGeometry();
+
+		geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+		geometry.setAttribute("normal", new THREE.BufferAttribute(normals, 3));
+		geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+		geometry.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
+
+		geometry.setIndex([
+			0, 1, 2,
+			2, 1, 3
+		]);
+
+		//geometry.computeVertexNormals();
+
+		const textureLoader = new THREE.TextureLoader();
+		const map = textureLoader.load("../examples/textures/uv_grid_opengl.jpg")
+
+
+		const material = new THREE.MeshPhongMaterial({ color: 0xffffff ,
+			 vertexColors: true,
+			 map: map
+			});
+
+		const box = new THREE.Mesh(geometry, material);
+		this._scene.add(box);
+
+		const helper = new VertexNormalsHelper(box, 0.1, 0xffff00); //노란색의 법선벡터를 생성
+		this._scene.add(helper);
 	}
 
 	resize(){
@@ -91,9 +145,7 @@ class App {
 	update(time) {
 		time *= 0.001; //ms를 s로 바꿔준다
 
-		//x, y의 회전값에 시간값을 넣으면 x,y축으로 큐브가 회전하게된다
-		this._cube.rotation.x = time;
-		this._cube.rotation.y = time;
+
 	}
 }
 

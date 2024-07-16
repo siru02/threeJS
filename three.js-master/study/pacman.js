@@ -1,5 +1,5 @@
-import * as THREE from "three"
-import { GLTFLoader } from "GLTFLoader";
+import * as THREE from '../build/three.module.js';
+import { GLTFLoader } from "../examples/jsm/loaders/GLTFLoader.js";
 
 const canvas1 = document.querySelector("#canvas1");
 const canvas2 = document.querySelector("#canvas2");
