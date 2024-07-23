@@ -78,6 +78,7 @@ class pongGame {
         this._ALight = ALight;
         PLight.position.set(50, 50, 0);
         this._scene.add(PLight, ALight);
+        // this._scene.add(ALight);
     }
 
     _setupModel() {
@@ -105,20 +106,35 @@ class pongGame {
         this._scene.add(this._perspectiveLine);
 
         //경기장
-        // const stadiumShape = new THREE.Shape();
-        // stadiumShape.moveTo(6, 6);
-        // stadiumShape.lineTo(6, -6);
-        // stadiumShape.lineTo(-6, -6);
-        // stadiumShape.lineTo(-6, 6);
-        const stadiumGeometry = new THREE.BoxGeometry(24, 24, 100); //TODO: 좌표 수정해야함
-        const stadiumEdges = new THREE.EdgesGeometry(stadiumGeometry);
-        const stadiumMaterial = new THREE.MeshBasicMaterial({ 
+        // const stadiumGeometry = new THREE.BoxGeometry(24, 24, 100); //TODO: 좌표 수정해야함
+        // const stadiumEdges = new THREE.EdgesGeometry(stadiumGeometry);
+        // const stadiumMaterial = new THREE.MeshBasicMaterial({ 
+        //     color: 0x00ff00,
+        //     polygonOffset: true,
+        // });
+        // const stadium = new THREE.LineSegments(stadiumEdges, stadiumMaterial);
+        // this._scene.add(stadium);
+        const stadiumGeometry = new THREE.BoxGeometry(24, 24, 100);
+        const stadiumMaterial = new THREE.MeshBasicMaterial({
             color: 0x00ff00,
+            transparent: true,
+            opacity: 0,
+            polygonOffset: true,
+            polygonOffsetFactor: 1,
+            polygonOffsetUnits: 1,
         });
-        const stadium = new THREE.LineSegments(stadiumEdges, stadiumMaterial);
+        const stadium = new THREE.Mesh(stadiumGeometry, stadiumMaterial);
         this._scene.add(stadium);
+        this._stadium = stadium;
+
+        // 경기장 테두리
+        const stadiumEdges = new THREE.EdgesGeometry(stadiumGeometry);
+        const edgesMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+        const stadiumLine = new THREE.LineSegments(stadiumEdges, edgesMaterial);
+        this._scene.add(stadiumLine);
 
         //패널
+        
         
     }
 
