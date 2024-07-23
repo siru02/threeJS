@@ -28,7 +28,7 @@ class pongGame {
         this._renderer2 = renderer2;
 
         let scene = new THREE.Scene();
-        scene.background = new THREE.Color("skyblue");
+        scene.background = new THREE.Color("black");
         this._scene = scene;
 
         this._setupCamera(); // 카메라 객체 설정
@@ -100,7 +100,7 @@ class pongGame {
         const lineGeometry = new THREE.BufferGeometry();
         const linePoints = lineShape.getPoints();
         lineGeometry.setFromPoints(linePoints);
-        const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffff00 });
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0x14ff00 });
         const perspectiveLine = new THREE.Line(lineGeometry, lineMaterial);
         this._perspectiveLine = perspectiveLine;
         this._scene.add(this._perspectiveLine);
@@ -129,7 +129,7 @@ class pongGame {
 
         // 경기장 테두리
         const stadiumEdges = new THREE.EdgesGeometry(stadiumGeometry);
-        const edgesMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+        const edgesMaterial = new THREE.LineBasicMaterial({ color: 0x1e30f5 });
         const stadiumLine = new THREE.LineSegments(stadiumEdges, edgesMaterial);
         this._scene.add(stadiumLine);
 
