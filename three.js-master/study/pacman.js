@@ -56,7 +56,7 @@ class pongGame {
             0.1,
             1000
         );
-        camera1.position.set(0, 0, 42); // 카메라의 위치 설정 (x: 0, y: 0, z: 42)
+        camera1.position.set(0, 0, 100); // 카메라의 위치 설정 (x: 0, y: 0, z: 42)
         camera1.lookAt(0, 0, 0);
         this._camera1 = camera1;
 
@@ -66,7 +66,7 @@ class pongGame {
             0.1,
             1000
         );
-        camera2.position.set(0, 0, -42);
+        camera2.position.set(0, 0, -100);
         camera2.lookAt(0, 0, 0);
         this._camera2 = camera2;
     }
@@ -90,19 +90,36 @@ class pongGame {
         });
 
         // 원근감을 위한 사각테두리라인
-        const shape = new THREE.Shape();
-        shape.moveTo(6, 6);
-        shape.lineTo(6, -6);
-        shape.lineTo(-6, -6);
-        shape.lineTo(-6, 6);
-        shape.closePath();
-        const geometry = new THREE.BufferGeometry();
-        const points = shape.getPoints();
-        geometry.setFromPoints(points);
-        const material = new THREE.LineBasicMaterial({ color: 0xffff00 });
-        const perspectiveLine = new THREE.Line(geometry, material);
+        const lineShape = new THREE.Shape();
+        lineShape.moveTo(12, 12);
+        lineShape.lineTo(12, -12);
+        lineShape.lineTo(-12, -12);
+        lineShape.lineTo(-12, 12);
+        lineShape.closePath();
+        const lineGeometry = new THREE.BufferGeometry();
+        const linePoints = lineShape.getPoints();
+        lineGeometry.setFromPoints(linePoints);
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffff00 });
+        const perspectiveLine = new THREE.Line(lineGeometry, lineMaterial);
         this._perspectiveLine = perspectiveLine;
         this._scene.add(this._perspectiveLine);
+
+        //경기장
+        // const stadiumShape = new THREE.Shape();
+        // stadiumShape.moveTo(6, 6);
+        // stadiumShape.lineTo(6, -6);
+        // stadiumShape.lineTo(-6, -6);
+        // stadiumShape.lineTo(-6, 6);
+        const stadiumGeometry = new THREE.BoxGeometry(24, 24, 100); //TODO: 좌표 수정해야함
+        const stadiumEdges = new THREE.EdgesGeometry(stadiumGeometry);
+        const stadiumMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0x00ff00,
+        });
+        const stadium = new THREE.LineSegments(stadiumEdges, stadiumMaterial);
+        this._scene.add(stadium);
+
+        //패널
+        
     }
 
     resize() {
@@ -131,11 +148,11 @@ class pongGame {
     update(time) { // TODO: 앞으로 동작에 대해서 함수를 들어서 정의해야함
         if (this._ball) {
             this._ball.rotation.y += 0.02;
-            if (this._ball.position.z >= 20 || this._ball.position.z <= -20) {
+            if (this._ball.position.z >= 49 || this._ball.position.z <= -49) {
                 this._flag *= -1;
             }
-            this._ball.position.z += 0.2 * this._flag;
-            this._perspectiveLine.position.z += 0.2 * this._flag;
+            this._ball.position.z += 0.4 * this._flag;
+            this._perspectiveLine.position.z += 0.4 * this._flag;
         }
     }
 }
