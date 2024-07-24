@@ -45,7 +45,7 @@ class pongGame {
         requestAnimationFrame(this.render.bind(this));
 
         //게임에 사용할 변수들
-        this._vec = [0, 0, 1]; //공의 방향벡터
+        this._vec = new THREE.Vector3(0.1, 0.4, 1); //공의 방향벡터
         this._flag = 1; //공이 player1의 방향인지 player2의 방향인지 여부
     }
 
@@ -64,7 +64,7 @@ class pongGame {
 
         const camera2 = new THREE.PerspectiveCamera(
             45,
-            (window.innerWidth / 2) / window.innerHeight,
+            width / height,
             0.1,
             1000
         );
@@ -246,17 +246,6 @@ class pongGame {
         return null;
     }
 
-    // getCollisionPoint(obj1, obj2) {
-    //     // const obj1Box = new THREE.Box3().setFromObject(obj1);
-    //     // const obj2Box = new THREE.Box3().setFromObject(obj2);
-    //     const intersectionBox = this._stadium.boundingBox.intersect(this._ballBoundingBox);
-    
-    //     if (!intersectionBox.isEmpty()) {
-    //         return intersectionBox.getCenter(new THREE.Vector3());
-    //     }
-    //     return null;
-    // }
-
     reflection() {
 
     }
@@ -267,14 +256,16 @@ class pongGame {
             if (this.collision()) {
                 // const collisionPoint = this.getCollisionPoint(this._stadium, this._ball);
                 // console.log('Collision detected at:', collisionPoint);
-                this._flag *= -1;
-                
+                // this._vec.multiplyScalar(-1);
+                this._vec.x *= -1;
+                this._vec.y *= -1;
             }
-            // if (this._ball.position.z > 49 || this._ball.position.z < -49) {
-            //     this._flag *= -1;
-            // }
-            this._ball.position.z += 0.4 * this._flag;
-            this._perspectiveLineEdges.position.z += 0.4 * this._flag;
+            if (this._ball.position.z > 49 || this._ball.position.z < -49){
+                this._vec.z *= -1;
+            }
+            const movement = new THREE.Vector3().copy(this._vec).multiplyScalar(0.4);
+            this._ball.position.add(movement);
+            this._perspectiveLineEdges.position.z = this._ball.position.z;
         }
     }
 }
