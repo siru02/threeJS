@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<!-- <link rel="stylesheet" href="01-basic.css"> -->
+	<!-- <script async src="https://ga.jspm.io/npm:es-module-shims@1.5.1/dist/es-module-shims.js"></script> -->
+    <script type="importmap">
+		{
+			"imports": {
+				"three": "../build/three.module.js"
+			}
+		}
+		</script>
+	<!-- <script type="module">
+		import * as THREE from 'three';
+	</script> -->
+	<!-- <script type="module" src="01-basic.js" defer></script> -->
+	<script type="module" src="pacman.js" defer></script>
+</head>
+<body>
+	<!-- <div id="webgl-container"></div> -->
+    <div style="display: flex;">
+        <canvas id="canvas1"></canvas>
+        <canvas id="canvas2"></canvas>
+    </div>
+</body>
+</html>
