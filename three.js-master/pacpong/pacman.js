@@ -90,8 +90,16 @@ class pongGame {
         loader.load("pac/scene.gltf", (gltf) => {
             this._ball = gltf.scene;
             this._scene.add(this._ball);
-            //ball BoundingBox 설정
-            this._ball.traverse((child) => { //TODO: 추가공부필요
+        
+            // Ball의 BoundingBox 설정 및 크기 계산
+            let box = new THREE.Box3().setFromObject(this._ball);
+            let size = new THREE.Vector3();
+            box.getSize(size);
+            this._radius = 2;
+        
+            console.log('Ball size:', size);
+        
+            this._ball.traverse((child) => {
                 if (child.isMesh) {
                     child.geometry.computeBoundingBox();
                     child.boundingBox = new THREE.Box3().setFromObject(child);
@@ -136,8 +144,26 @@ class pongGame {
             polygonOffsetUnits: 1,
         });
         const stadium = new THREE.Mesh(stadiumGeometry, stadiumMaterial);
+
         this._scene.add(stadium);
         this._stadium = stadium;
+
+        // BoxGeometry의 6개 면 정의
+        this._planes = [
+            new THREE.Plane(new THREE.Vector3(1, 0, 0), -this._stadium.geometry.parameters.width / 2),  // Left
+            new THREE.Plane(new THREE.Vector3(-1, 0, 0), -this._stadium.geometry.parameters.width / 2), // Right
+            new THREE.Plane(new THREE.Vector3(0, 1, 0), -this._stadium.geometry.parameters.height / 2), // Bottom
+            new THREE.Plane(new THREE.Vector3(0, -1, 0), -this._stadium.geometry.parameters.height / 2), // Top
+            new THREE.Plane(new THREE.Vector3(0, 0, 1), -this._stadium.geometry.parameters.depth / 2),  // Front
+            new THREE.Plane(new THREE.Vector3(0, 0, -1), -this._stadium.geometry.parameters.depth / 2)  // Back
+        ];
+        for (const plane in this._planes){
+            console.log(plane);
+        }
+
+        //stadium BoundingBox
+        this._stadium.geometry.computeBoundingBox();
+        this._stadium.boundingBox = new THREE.Box3().setFromObject(this._stadium);
 
         //Mesh: 경기장 테두리
         const stadiumEdges = new THREE.EdgesGeometry(stadiumGeometry); //geometry의 테두리를 추출하는 함수
@@ -162,9 +188,6 @@ class pongGame {
         }
         this._scene.add(edges);
 
-        //stadium BoundingBox
-        this._stadium.geometry.computeBoundingBox();
-        this._stadium.boundingBox = new THREE.Box3().setFromObject(this._stadium);
         //Mesh: 패널
         
         
@@ -197,21 +220,42 @@ class pongGame {
         // if (!this._ballBoundingBox || !this._stadium.boundingBox) {
         //     return false;
         // }
-        return this._stadium.boundingBox.intersectsBox(this._ballBoundingBox);
-    }
+        // return this._stadium.boundingBox.intersectsBox(this._ballBoundingBox);
 
-    getCollisionPoint(obj1, obj2) {
-        const direction = new THREE.Vector3();
-        direction.subVectors(obj2.position, obj1.position).normalize();
-
-        const raycaster = new THREE.Raycaster(obj1.position, direction);
-        const intersects = raycaster.intersectObject(obj2, true);
-
-        if (intersects.length > 0) {
-            return intersects[0].point;
+        for (const plane of this._planes){
+            // console.log(plane);
+            const collisionPoint = this.getCollisionPointWithPlane(plane);
+            if (collisionPoint) {
+                console.log('Collision detected at:', collisionPoint);
+                return collisionPoint;
+            }
         }
         return null;
     }
+
+    getCollisionPointWithPlane(plane) {
+        const ballCenter = this._ball.position;
+        const ballRadius = this._radius;
+
+        const distanceToPlane = plane.distanceToPoint(ballCenter);
+
+        if (Math.abs(distanceToPlane) <= ballRadius) {
+            const collisionPoint = ballCenter.clone().sub(plane.normal.clone().multiplyScalar(distanceToPlane));
+            return collisionPoint;
+        }
+        return null;
+    }
+
+    // getCollisionPoint(obj1, obj2) {
+    //     // const obj1Box = new THREE.Box3().setFromObject(obj1);
+    //     // const obj2Box = new THREE.Box3().setFromObject(obj2);
+    //     const intersectionBox = this._stadium.boundingBox.intersect(this._ballBoundingBox);
+    
+    //     if (!intersectionBox.isEmpty()) {
+    //         return intersectionBox.getCenter(new THREE.Vector3());
+    //     }
+    //     return null;
+    // }
 
     reflection() {
 
@@ -220,19 +264,21 @@ class pongGame {
     update(time) { // TODO: 앞으로 동작에 대해서 함수를 들어서 정의해야함
         if (this._ball) {
             this._ball.rotation.y += 0.02;
-            // if (this.collision()) {
-            //     const collisionPoint = this.getCollisionPoint(this._stadium, this._ball);
-            //     console.log('Collision detected at:', collisionPoint);
+            if (this.collision()) {
+                // const collisionPoint = this.getCollisionPoint(this._stadium, this._ball);
+                // console.log('Collision detected at:', collisionPoint);
+                this._flag *= -1;
+                
+            }
+            // if (this._ball.position.z > 49 || this._ball.position.z < -49) {
             //     this._flag *= -1;
             // }
-            // // if (this._ball.position.z > 49 || this._ball.position.z < -49) {
-            //     this._flag *= -1;
-            // }
-            // this._ball.position.z += 0.4 * this._flag;
-            // this._perspectiveLineEdges.position.z += 0.4 * this._flag;
+            this._ball.position.z += 0.4 * this._flag;
+            this._perspectiveLineEdges.position.z += 0.4 * this._flag;
         }
     }
 }
+
 
 window.onload = function() {
     new pongGame();
