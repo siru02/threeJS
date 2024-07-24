@@ -44,7 +44,9 @@ class pongGame {
         // render 함수 정의 및 애니메이션 프레임 요청
         requestAnimationFrame(this.render.bind(this));
 
-        this._flag = 1;
+        //게임에 사용할 변수들
+        this._vec = [0, 0, 1]; //공의 방향벡터
+        this._flag = 1; //공이 player1의 방향인지 player2의 방향인지 여부
     }
 
     _setupCamera() {
@@ -56,7 +58,7 @@ class pongGame {
             0.1,
             1000
         );
-        camera1.position.set(0, 0, 100); // 카메라의 위치 설정 (x: 0, y: 0, z: 42)
+        camera1.position.set(0, 0, 100);
         camera1.lookAt(0, 0, 0);
         this._camera1 = camera1;
 
@@ -88,50 +90,23 @@ class pongGame {
         loader.load("pac/scene.gltf", (gltf) => {
             this._ball = gltf.scene;
             this._scene.add(this._ball);
+            //ball BoundingBox 설정
+            this._ball.traverse((child) => { //TODO: 추가공부필요
+                if (child.isMesh) {
+                    child.geometry.computeBoundingBox();
+                    child.boundingBox = new THREE.Box3().setFromObject(child);
+                }
+            });
+            this._ballBoundingBox = new THREE.Box3().setFromObject(this._ball);
         });
 
         const edgeThickness = 0.1; // 선의 두께 설정
 
         //Mesh: 원근감을 위한 사각테두리라인
-        const lineShape = new THREE.Shape();
-        lineShape.moveTo(10, 10);
-        lineShape.lineTo(10, -10);
-        lineShape.lineTo(-10, -10);
-        lineShape.lineTo(-10, 10);
-        lineShape.closePath();
-
-        const lineGeometry = new THREE.BufferGeometry();
-        const linePoints = lineShape.getPoints();
-        lineGeometry.setFromPoints(linePoints);
-    
-        const lineMaterial = new THREE.LineBasicMaterial({ 
-            color: 0x14ff00,
-        });
-        const perspectiveLine = new THREE.Line(lineGeometry, lineMaterial);
+        const positions = [10, 10, 0, 10, -10, 0, -10, -10, 0, -10, 10, 0, 10, 10, 0];
+        const perspectiveLineEdgesMaterial = new THREE.MeshBasicMaterial({ color: 0x14ff00 });
         const perspectiveLineEdges = new THREE.Group();
         
-        const perspectiveLineEdgesMaterial = new THREE.MeshBasicMaterial({ color: 0x14ff00 });
-        
-        const positions = perspectiveLine.geometry.attributes.position.array;
-        // perspectiveLine.geometry.attributes.position.array.forEach((value, index, array) => { //forEach로 각 배열 요소에 대해 제공된 함수를 호출한다 //여기서 객체는 경기장테두리들이고 배열은 경기장테두리의 각 변이다
-        //     //현재 탐색하는 배열에서 value는 배열 요소의 값을 나타내며 각 좌표 값(x, y, z)를 나타낸다
-        //     //array는 현재 순회 중인 배열 자체로 stadiumEdges.attributes.position.array 배열 전체를 나타낸다
-        //     if (index % 3 === 0 && index + 5 < array.length) { //각 edge는 2개의 점으로 이루어져있으므로 배열에서는 6개의 원소마다 하나의 edge를 가리킴
-        //         const start = new THREE.Vector3(array[index], array[index + 1], array[index + 2]); //3차원의 벡터를 생성한다
-        //         const end = new THREE.Vector3(array[index + 3], array[index + 4], array[index + 5]);
-
-        //         const cylinderGeometry = new THREE.CylinderGeometry(edgeThickness, edgeThickness, start.distanceTo(end), 8); //8각형으로 원통구성
-        //         const edge = new THREE.Mesh(cylinderGeometry, perspectiveLineEdgesMaterial);
-
-        //         const midPoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
-        //         edge.position.copy(midPoint);
-
-        //         edge.lookAt(end);
-        //         edge.rotateX(Math.PI / 2);
-
-        //         perspectiveLineEdges.add(edge); //그룹에 각 edge를 추가한다
-        //     }
-        // });
         for (let i = 0; i < positions.length - 3; i += 3) {
             const start = new THREE.Vector3(positions[i], positions[i + 1], positions[i + 2]);
             const end = new THREE.Vector3(positions[i + 3], positions[i + 4], positions[i + 5]);
@@ -185,27 +160,11 @@ class pongGame {
         
             edges.add(edge);
         }
-        // stadiumEdges.attributes.position.array.forEach((value, index, array) => { //forEach로 각 배열 요소에 대해 제공된 함수를 호출한다 //여기서 객체는 경기장테두리들이고 배열은 경기장테두리의 각 변이다
-        //     //현재 탐색하는 배열에서 value는 배열 요소의 값을 나타내며 각 좌표 값(x, y, z)를 나타낸다
-        //     //array는 현재 순회 중인 배열 자체로 stadiumEdges.attributes.position.array 배열 전체를 나타낸다
-        //     if (index % 6 === 0) { //각 edge는 2개의 점으로 이루어져있으므로 배열에서는 6개의 원소마다 하나의 edge를 가리킴
-        //         const start = new THREE.Vector3(array[index], array[index + 1], array[index + 2]); //3차원의 벡터를 생성한다
-        //         const end = new THREE.Vector3(array[index + 3], array[index + 4], array[index + 5]);
-
-        //         const cylinderGeometry = new THREE.CylinderGeometry(edgeThickness, edgeThickness, start.distanceTo(end), 8); //8각형으로 원통구성
-        //         const edge = new THREE.Mesh(cylinderGeometry, edgesMaterial);
-
-        //         const midPoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
-        //         edge.position.copy(midPoint);
-
-        //         edge.lookAt(end);
-        //         edge.rotateX(Math.PI / 2);
-
-        //         edges.add(edge); //그룹에 각 edge를 추가한다
-        //     }
-        // });
         this._scene.add(edges);
 
+        //stadium BoundingBox
+        this._stadium.geometry.computeBoundingBox();
+        this._stadium.boundingBox = new THREE.Box3().setFromObject(this._stadium);
         //Mesh: 패널
         
         
@@ -234,15 +193,43 @@ class pongGame {
         // 생성자의 코드와 동일: 계속 렌더 메소드가 무한히 반복되어 호출되도록 만든다
     }
 
+    collision() {
+        // if (!this._ballBoundingBox || !this._stadium.boundingBox) {
+        //     return false;
+        // }
+        return this._stadium.boundingBox.intersectsBox(this._ballBoundingBox);
+    }
+
+    getCollisionPoint(obj1, obj2) {
+        const direction = new THREE.Vector3();
+        direction.subVectors(obj2.position, obj1.position).normalize();
+
+        const raycaster = new THREE.Raycaster(obj1.position, direction);
+        const intersects = raycaster.intersectObject(obj2, true);
+
+        if (intersects.length > 0) {
+            return intersects[0].point;
+        }
+        return null;
+    }
+
+    reflection() {
+
+    }
+
     update(time) { // TODO: 앞으로 동작에 대해서 함수를 들어서 정의해야함
         if (this._ball) {
             this._ball.rotation.y += 0.02;
-            if (this._ball.position.z > 49 || this._ball.position.z < -49) {
-                this._flag *= -1;
-            }
-            this._ball.position.z += 0.4 * this._flag;
-            // this._perspectiveLine.position.z += 0.4 * this._flag;
-            this._perspectiveLineEdges.position.z += 0.4 * this._flag;
+            // if (this.collision()) {
+            //     const collisionPoint = this.getCollisionPoint(this._stadium, this._ball);
+            //     console.log('Collision detected at:', collisionPoint);
+            //     this._flag *= -1;
+            // }
+            // // if (this._ball.position.z > 49 || this._ball.position.z < -49) {
+            //     this._flag *= -1;
+            // }
+            // this._ball.position.z += 0.4 * this._flag;
+            // this._perspectiveLineEdges.position.z += 0.4 * this._flag;
         }
     }
 }
