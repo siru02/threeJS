@@ -35,6 +35,12 @@ class pongGame {
         this._setupLight(); // 광원을 설정
         this._setupModel(); // 3차원 모델을 설정
 
+        // keydown 이벤트 핸들러를 추가
+        window.addEventListener('keydown', this.keydown.bind(this));
+
+        // keyup 이벤트 핸들러를 추가
+        window.addEventListener('keyup', this.keyup.bind(this));
+
         // resize 이벤트 핸들러를 추가
         window.addEventListener('resize', this.resize.bind(this));
 
@@ -48,6 +54,7 @@ class pongGame {
         this._vec = new THREE.Vector3(0.5, 0.9, 5); //공의 방향벡터 //0.5일때 터짐
         this._angularVec = new THREE.Vector3(0.01, 0.01, 0.01); //공의 각속도 회전 벡터
         this._flag = 1; //공이 player1의 방향인지 player2의 방향인지 여부
+        this._keyState = {}; // 키보드 입력 상태를 추적하는 변수
     }
 
     _setupCamera() {
@@ -81,7 +88,6 @@ class pongGame {
         this._ALight = ALight;
         PLight.position.set(50, 50, 0);
         this._scene.add(PLight, ALight);
-        // this._scene.add(ALight);
     }
 
     _setupModel() {
@@ -98,8 +104,6 @@ class pongGame {
             box.getSize(size);
             this._radius = 2;
         
-            console.log('Ball size:', size);
-        
             this._ball.traverse((child) => {
                 if (child.isMesh) {
                     child.geometry.computeBoundingBox();
@@ -110,7 +114,6 @@ class pongGame {
         });
 
         const edgeThickness = 0.1; // 선의 두께 설정
-
         //Mesh: 원근감을 위한 사각테두리라인
         const positions = [10, 10, 0, 10, -10, 0, -10, -10, 0, -10, 10, 0, 10, 10, 0];
         const perspectiveLineEdgesMaterial = new THREE.MeshBasicMaterial({ color: 0x14ff00 });
@@ -160,8 +163,8 @@ class pongGame {
         ];
 
         //stadium BoundingBox
-        this._stadium.geometry.computeBoundingBox();
-        this._stadium.boundingBox = new THREE.Box3().setFromObject(this._stadium);
+        // this._stadium.geometry.computeBoundingBox();
+        // this._stadium.boundingBox = new THREE.Box3().setFromObject(this._stadium);
 
         //Mesh: 경기장 테두리
         const stadiumEdges = new THREE.EdgesGeometry(stadiumGeometry); //geometry의 테두리를 추출하는 함수
@@ -187,14 +190,31 @@ class pongGame {
         this._scene.add(edges);
 
         //Mesh: 패널
-        const panelGeomtery = new THREE.PlaneGeometry(4, 4);
-        const panelMaterial = new THREE.MeshBasicMaterial({ color: 0x1e30f5 });
-        const panel1 = new THREE.Mesh(panelGeomtery, panelMaterial);
-        panel1.position.set(0, 0, 50);
-        const panel2 = new THREE.Mesh(panelGeomtery, panelMaterial);
-        panel2.position.set(0, 0, -50);
-
-        
+        const panelGeomtery = new THREE.PlaneGeometry(6, 6);
+        const panelMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0x1e30f5,
+            transparent: true,
+            opacity: 0.5
+        });
+        const panel1Mesh = new THREE.Mesh(panelGeomtery, panelMaterial);
+        panel1Mesh.position.set(0, 0, 50);
+        panel1Mesh.lookAt(0, 0, 100);
+        const panel1Plane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 6);
+        const panel1 = new THREE.Group();
+        panel1.add(panel1Mesh);
+        panel1.add(panel1Plane);
+        this._panel1 = panel1;
+        this._scene.add(panel1);
+    
+        const panel2Mesh = new THREE.Mesh(panelGeomtery, panelMaterial);
+        panel2Mesh.position.set(0, 0, -50);
+        panel2Mesh.lookAt(0, 0, -100);
+        const panel2Plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 6);
+        const panel2 = new THREE.Group();
+        panel2.add(panel2Mesh);
+        panel2.add(panel2Plane);
+        this._panel2 = panel2;
+        this._scene.add(panel2);
     }
 
     resize() {
@@ -224,10 +244,10 @@ class pongGame {
         for (const plane of this._planes){
             const collisionPoint = this.getCollisionPointWithPlane(plane);
             if (collisionPoint) {
-                console.log("collision plane");
-                console.log(plane.normal); //정상출력
-                console.log(this._vec); //정상출력
-                console.log('Collision detected at:', collisionPoint);
+                // console.log("collision plane");
+                // console.log(plane.normal); //정상출력
+                // console.log(this._vec); //정상출력
+                // console.log('Collision detected at:', collisionPoint);
                 this._ball.position.copy(collisionPoint);
                 this._ball.position.add(plane.normal.clone().multiplyScalar(this._radius));
                 return plane;
@@ -253,36 +273,15 @@ class pongGame {
         const n = plane.normal.clone();
         const v = this._vec.clone();
         const w = this._angularVec.clone();
-    
-        // 충돌 전 회전 속도 영향 계산
-        const v_r = w.clone().cross(n.clone().multiplyScalar(radius));
-        console.log("Surface Velocity (v_r):", v_r);
-    
-        // 충돌 후 반사 벡터 계산
-        const dotProduct = v.dot(n);
-        const reflection = n.clone().multiplyScalar(dotProduct * 2);
-        const v_prime = v.clone().sub(reflection);
-        console.log("Reflection Vector (v'):", v_prime);
-    
-        // 충돌 전후의 속도 변화 (가정: v' - v)
-        const delta_v = v_prime.clone().sub(v);
-        console.log("Velocity Change (Δv):", delta_v);
-    
-        // 충격력 계산 (f = Δv)
-        const F = delta_v.clone(); // timeStep 없이 단순한 변화량으로 충격력 추정
-        console.log("Impact Force (F):", F);
-    
+
+        
         // 충격 모멘트 계산 (τ = r × F)
-        const r = n.clone().multiplyScalar(radius);
+        const F = this._angularVec.clone().multiplyScalar(-0.1); //마찰력
+        console.log("F: ", F);
+        const r = n.clone();
         const tau = r.clone().cross(F);
         console.log("Torque (τ):", tau);
     
-        // 구의 관성 모멘트 텐서 (단순화된 구의 경우)
-        const I = new THREE.Matrix3().set(
-            0.4 * radius * radius, 0, 0,
-            0, 0.4 * radius * radius, 0,
-            0, 0, 0.4 * radius * radius
-        );
         // 관성 모멘트 텐서의 역행렬 계산
         const I_inv = new THREE.Matrix3().set(
             1 / (0.4 * radius * radius), 0, 0,
@@ -291,32 +290,39 @@ class pongGame {
         );
     
         // 각속도 변화 계산 (Δω = I^(-1) * τ)
-        const delta_w = tau.applyMatrix3(I_inv);
+        const delta_w = new THREE.Vector3().copy(tau).applyMatrix3(I_inv);
         console.log("Angular Velocity Change (Δω):", delta_w);
     
         // 최종 각속도 벡터 계산 (ω' = ω + Δω)
         const w_prime = w.clone().add(delta_w);
         console.log("Final Angular Velocity (ω'):", w_prime);
-    
+        
+        const spinSpeed = w_prime.length();
+        if (spinSpeed > 0.1)
+            w_prime.multiplyScalar(spinSpeed / 2);
         // 각속도 벡터 업데이트
         this._angularVec.copy(w_prime);
     }
 
     updateVector(plane) {
+
+        const previousVec = this._vec.clone();
+
         // ball의 방향벡터
+        // v = v - 2(v dot plane.normal)plane.normal + w cross (radius * plane.normal)
         const dotProduct = this._vec.dot(plane.normal);
-        console.log("Dot Product:", dotProduct);
+        // console.log("Dot Product:", dotProduct);
 
         const reflection = plane.normal.clone().multiplyScalar(dotProduct * 2);
-        console.log("Reflection:", reflection);
+        // console.log("Reflection:", reflection);
 
-        const angularComponent = this._angularVec.clone().cross(plane.normal.clone().multiplyScalar(this._radius));
-        console.log("angularComponent:", angularComponent);
+        const angularComponent = this._angularVec.clone().cross(plane.normal.clone().multiplyScalar(this._radius / 10));
+        // console.log("angularComponent:", angularComponent);
 
         this._vec.sub(reflection).add(angularComponent);
 
         // ball의 각속도 벡터
-        this.updateAngularVelocity(plane, this._radius);
+        this.updateAngularVelocity(plane, this._radius, previousVec);
     }
 
     update(time) { // TODO: 앞으로 동작에 대해서 함수를 들어서 정의해야함
@@ -334,17 +340,53 @@ class pongGame {
                 // 충돌 감지 및 처리
                 const collisionPlane = this.collision();
                 if (collisionPlane) {
-                    console.log("collision plane return");
-                    console.log(collisionPlane.normal);
+                    // console.log("collision plane return");
+                    // console.log(collisionPlane.normal);
                     this.updateVector(collisionPlane);
-                    
                     break; // 충돌이 발생하면 반복문을 중지합니다.
                 }
             }
             // if (this._ball.position.z > 49 || this._ball.position.z < -49){
             //     this._vec.z *= -1;
             // }
+            this.updatePanel();
             this._perspectiveLineEdges.position.z = this._ball.position.z;
+        }
+    }
+
+    keydown(event) {
+        this._keyState[event.code] = true;
+    }
+
+    keyup(event){
+        // console.log("test");
+        this._keyState[event.code] = false;
+    }
+
+    updatePanel(){
+        if (this._keyState['KeyW']) {
+            this._panel1.position.y += 0.6;
+        }
+        if (this._keyState['KeyS']) {
+            this._panel1.position.y -= 0.6;
+        }
+        if (this._keyState['KeyA']) {
+            this._panel1.position.x -= 0.6;
+        }
+        if (this._keyState['KeyD']) {
+            this._panel1.position.x += 0.6;
+        }
+        if (this._keyState['ArrowUp']) {
+            this._panel2.position.y += 0.6;
+        }
+        if (this._keyState['ArrowDown']) {
+            this._panel2.position.y -= 0.6;
+        }
+        if (this._keyState['ArrowLeft']) {
+            this._panel2.position.x += 0.6;
+        }
+        if (this._keyState['ArrowRight']) {
+            this._panel2.position.x -= 0.6;
         }
     }
 }
