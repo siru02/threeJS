@@ -51,8 +51,8 @@ class pongGame {
         requestAnimationFrame(this.render.bind(this));
 
         //게임에 사용할 변수들
-        this._vec = new THREE.Vector3(0.5, 0.9, 5); //공의 방향벡터 //0.5일때 터짐
-        this._angularVec = new THREE.Vector3(0.01, 0.01, 0.01); //공의 각속도 회전 벡터
+        this._vec = new THREE.Vector3(0, 0, 3); //공의 방향벡터 //0.5일때 터짐
+        this._angularVec = new THREE.Vector3(0, 0, 0); //공의 각속도 회전 벡터
         this._flag = 1; //공이 player1의 방향인지 player2의 방향인지 여부
         this._keyState = {}; // 키보드 입력 상태를 추적하는 변수
     }
@@ -158,8 +158,8 @@ class pongGame {
             new THREE.Plane(new THREE.Vector3(-1, 0, 0), this._stadium.geometry.parameters.width / 2), // Right
             new THREE.Plane(new THREE.Vector3(0, 1, 0), this._stadium.geometry.parameters.height / 2), // Bottom
             new THREE.Plane(new THREE.Vector3(0, -1, 0), this._stadium.geometry.parameters.height / 2), // Top
-            new THREE.Plane(new THREE.Vector3(0, 0, 1), this._stadium.geometry.parameters.depth / 2),  // Front
-            new THREE.Plane(new THREE.Vector3(0, 0, -1), this._stadium.geometry.parameters.depth / 2)  // Back
+            // new THREE.Plane(new THREE.Vector3(0, 0, 1), this._stadium.geometry.parameters.depth / 2),  // Front
+            // new THREE.Plane(new THREE.Vector3(0, 0, -1), this._stadium.geometry.parameters.depth / 2)  // Back
         ];
 
         //stadium BoundingBox
@@ -196,25 +196,30 @@ class pongGame {
             transparent: true,
             opacity: 0.5
         });
-        const panel1Mesh = new THREE.Mesh(panelGeomtery, panelMaterial);
-        panel1Mesh.position.set(0, 0, 50);
-        panel1Mesh.lookAt(0, 0, 100);
-        const panel1Plane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 6);
-        const panel1 = new THREE.Group();
-        panel1.add(panel1Mesh);
-        panel1.add(panel1Plane);
+        const panel1 = new THREE.Mesh(panelGeomtery, panelMaterial);
+        panel1.position.set(0, 0, 50);
+        panel1.lookAt(0, 0, 100);
+        const panel1Plane = new THREE.Plane(new THREE.Vector3(0, 0, -1), this._stadium.geometry.parameters.depth / 2);
+        this._panel1Plane = panel1Plane;
         this._panel1 = panel1;
         this._scene.add(panel1);
-    
-        const panel2Mesh = new THREE.Mesh(panelGeomtery, panelMaterial);
-        panel2Mesh.position.set(0, 0, -50);
-        panel2Mesh.lookAt(0, 0, -100);
-        const panel2Plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 6);
-        const panel2 = new THREE.Group();
-        panel2.add(panel2Mesh);
-        panel2.add(panel2Plane);
+
+        const panel2 = new THREE.Mesh(panelGeomtery, panelMaterial);
+        panel2.position.set(0, 0, -50);
+        panel2.lookAt(0, 0, 100);
+        const panel2Plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), this._stadium.geometry.parameters.depth / 2);
+        this._panel2Plane = panel2Plane;
         this._panel2 = panel2;
         this._scene.add(panel2);
+        // const panel2Mesh = new THREE.Mesh(panelGeomtery, panelMaterial);
+        // panel2Mesh.position.set(0, 0, -50);
+        // panel2Mesh.lookAt(0, 0, -100);
+        // const panel2Plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 6);
+        // const panel2 = new THREE.Group();
+        // panel2.add(panel2Mesh);
+        // panel2.add(panel2Plane);
+        // this._panel2 = panel2;
+        // this._scene.add(panel2);
     }
 
     resize() {
@@ -252,6 +257,27 @@ class pongGame {
                 this._ball.position.add(plane.normal.clone().multiplyScalar(this._radius));
                 return plane;
             }
+        }
+        let collisionPoint = this.getCollisionPointWithPlane(this._panel1Plane);
+        if (collisionPoint) { //TODO: panel1범위밖이면 종료하는 루틴을 추가
+            if (Math.abs(this._panel1.position.x - collisionPoint.x) > 6 || Math.abs(this._panel1.position.y - collisionPoint.y) > 6)
+                console.log("out of panel1");
+            this._ball.position.copy(collisionPoint);
+            this._ball.position.add(this._panel1Plane.normal.clone().multiplyScalar(this._radius));
+            return this._panel1Plane;
+        }
+
+        collisionPoint = this.getCollisionPointWithPlane(this._panel2Plane);
+        if (collisionPoint) { //TODO: panel1범위밖이면 종료하는 루틴을 추가
+            // console.log("collision plane");
+            // console.log(plane.normal); //정상출력
+            // console.log(this._vec); //정상출력
+            // console.log('Collision detected at:', collisionPoint);
+            if (Math.abs(this._panel2.position.x - collisionPoint.x) > 6 || Math.abs(this._panel2.position.y - collisionPoint.y) > 6)
+            console.log("out of panel2");
+            this._ball.position.copy(collisionPoint);
+            this._ball.position.add(this._panel2Plane.normal.clone().multiplyScalar(this._radius));
+            return this._panel2Plane;
         }
         return null;
     }
@@ -305,7 +331,7 @@ class pongGame {
     }
 
     updateVector(plane) {
-
+        //초기벡터 임시저장
         const previousVec = this._vec.clone();
 
         // ball의 방향벡터
