@@ -206,7 +206,7 @@ class pongGame {
 
         const panel2 = new THREE.Mesh(panelGeomtery, panelMaterial);
         panel2.position.set(0, 0, -50);
-        panel2.lookAt(0, 0, 100);
+        panel2.lookAt(0, 0, -100);
         const panel2Plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), this._stadium.geometry.parameters.depth / 2);
         this._panel2Plane = panel2Plane;
         this._panel2 = panel2;
@@ -260,8 +260,10 @@ class pongGame {
         }
         let collisionPoint = this.getCollisionPointWithPlane(this._panel1Plane);
         if (collisionPoint) { //TODO: panel1범위밖이면 종료하는 루틴을 추가
-            if (Math.abs(this._panel1.position.x - collisionPoint.x) > 6 || Math.abs(this._panel1.position.y - collisionPoint.y) > 6)
+            if (Math.abs(this._panel1.position.x - collisionPoint.x) > 6 || Math.abs(this._panel1.position.y - collisionPoint.y) > 6){
                 console.log("out of panel1");
+                
+            }
             this._ball.position.copy(collisionPoint);
             this._ball.position.add(this._panel1Plane.normal.clone().multiplyScalar(this._radius));
             return this._panel1Plane;
